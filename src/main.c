@@ -32,6 +32,9 @@
 
 #include "utils.h"
 
+#define DATA_LEN 1000
+#define BUFFER_LEN 450
+
 int main(int UNUSED argc, const char UNUSED * argv[]) {
 	int actual;  //variable for actual bytes transferred
 	int result;	 //reads data stream of spl and uboot
@@ -50,12 +53,18 @@ int main(int UNUSED argc, const char UNUSED * argv[]) {
 	ssize_t bootpSize = sizeof(bootp_packet);
 	ssize_t tftpSize = sizeof(tftp_data);
 
-	// allocate memory for buffer and data packets
-	unsigned char *data = (unsigned char*)calloc(1, 1000);
-	unsigned char *buffer = (unsigned char*)malloc(450 *
-				sizeof(unsigned char));
+	unsigned char *data;
+	unsigned char *buffer;
 
 	FILE *send;	// file object
+
+	// allocate memory for buffer and data packets
+	data = malloc(DATA_LEN);
+	buffer = malloc(BUFFER_LEN);
+	if (!data || !buffer) {
+		fprintf(stderr, "Out of memory\n");
+		exit(1);
+	}
 
 	libusb_device **devs = NULL;	//structure representing USB device
 	libusb_device_handle *dev_handle = NULL;	//structure representing handler on USB device
@@ -186,7 +195,11 @@ int main(int UNUSED argc, const char UNUSED * argv[]) {
 		perror("Cannot open spl binary");
 	}
 
-	char *reader = (char*)malloc(512 * sizeof(char));	// Allocationg memory block to reader
+	char *reader = malloc(512);	// Allocationg memory block to reader
+	if (!reader) {
+		fprintf(stderr, "Out of memory\n");
+		exit(1);
+	}
 
 	while (!feof(send)) {		// looping till end of the file
 		// Initializing memory to 0 for all packets
